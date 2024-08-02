@@ -4,7 +4,7 @@ import { ErrorResponse } from "../utils/error-response.util";
 
 export const protectedRoute = (requiredRoles: string[] = []) => {
   return (req: Request, res: Response, next: NextFunction): Response | void => {
-    if (!res.locals.user || !res.locals.session) {
+    if (!res.locals.dbUser || !res.locals.session) {
       return next(
         new ErrorResponse({
           message: "Unauthenticated",
@@ -15,7 +15,7 @@ export const protectedRoute = (requiredRoles: string[] = []) => {
 
     // Check for required roles
     if (requiredRoles.length > 0) {
-      const userRoles: string[] = res.locals.user.roles;
+      const userRoles: string[] = res.locals.dbUser.roles;
 
       const isAdmin = userRoles.includes(roles.admin);
 

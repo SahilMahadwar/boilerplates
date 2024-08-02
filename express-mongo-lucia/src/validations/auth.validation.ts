@@ -13,4 +13,10 @@ const generateOtp = {
   }),
 };
 
-export const authValidations = { otpLogin, generateOtp };
+const deleteUserSession = {
+  params: Joi.object({
+    id: Joi.string().required(),
+  }),
+};
+
+export const authValidations = { otpLogin, generateOtp, deleteUserSession };

@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { lucia } from "../configs/lucia.config";
+import { Session } from "../models/session.model";
 import { User } from "../models/user.model";
+import { getIp, getIpData } from "../utils/ip-util";
 
 export const luciaSession = async (
   req: Request,
@@ -14,7 +16,24 @@ export const luciaSession = async (
     return next();
   }
 
-  const { session, user } = await lucia.validateSession(sessionId);
+  const ip = getIp(req);
+
+  let { session, user } = await lucia.validateSession(sessionId);
+
+  if (session && ip !== session.ip) {
+    const ipInfo = await getIpData({ ip: ip });
+
+    await Session.findByIdAndUpdate(
+      { _id: sessionId },
+      {
+        ip: ip ? ip : null,
+        ip_info: ipInfo ? ipInfo : null,
+      }
+    );
+
+    session.ip = ip;
+    session.ipInfo = ipInfo;
+  }
 
   if (session && session.fresh) {
     res.appendHeader(
@@ -35,8 +54,15 @@ export const luciaSession = async (
 
   if (user?.id) {
     const fetchUser = await User.findById(user.id);
-    res.locals.user = fetchUser;
+    res.locals.dbUser = fetchUser;
   }
+
+  await Session.findByIdAndUpdate(
+    { _id: sessionId },
+    {
+      updated_at: new Date(),
+    }
+  );
 
   return next();
 };

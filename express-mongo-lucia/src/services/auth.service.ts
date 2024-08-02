@@ -1,5 +1,8 @@
+import parser from "ua-parser-js";
+import { lucia } from "../configs/lucia.config";
 import { otpTemplate } from "../emails/otp-template";
 import { OTP } from "../models/otp.model";
+import { formatIp, getIpData } from "../utils/ip-util";
 import { sendMail } from "./email.service";
 
 export const generateAndSendOtp = async ({ email }: { email: string }) => {
@@ -54,4 +57,39 @@ export const validateOTP = async ({
   await OTP.deleteOne({ email: email, otp: otp });
 
   return true;
+};
+
+export const createSession = async ({
+  ip,
+  rawUa,
+  userId,
+}: {
+  ip: string | undefined;
+  rawUa: string;
+  userId: string;
+}) => {
+  // Get Ip data
+  const ipInfo = await getIpData({ ip: ip });
+
+  // Parse user agent
+  const ua = parser(rawUa);
+
+  try {
+    const session = await lucia.createSession(userId as string, {
+      ip: formatIp({ ip: ip }),
+      ip_info: ipInfo,
+      device_info: {
+        ua: ua.ua,
+        browser: ua.browser,
+        device: ua.device,
+        os: ua.os,
+      },
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    return session;
+  } catch (error) {
+    return false;
+  }
 };

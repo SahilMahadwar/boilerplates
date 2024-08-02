@@ -1,6 +1,5 @@
 import Joi from "joi";
-
-const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+import { objectIdRegex } from "../utils/common.util";
 
 const getUserById = {
   params: Joi.object({

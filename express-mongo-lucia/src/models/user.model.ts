@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface IUser extends Document {
   name: string;
   email: string;
+  roles: string[];
   createdAt: Date;
   updatedAt: Date;
   transform(): Record<string, unknown>;
